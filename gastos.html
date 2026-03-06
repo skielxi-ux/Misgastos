@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gastos Fijos</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #111;
+    --gray: #888;
+    --light: #f4f4f4;
+    --border: #e8e8e8;
+    --danger: #e05252;
+    --orange: #f59e0b;
+    --green: #2ecc71;
+    --neon: #39ff14;
+  }
+
+  body { font-family: 'Poppins', sans-serif; background: #fff; color: var(--black); min-height: 100vh; padding: 48px 24px 80px; }
+  .container { max-width: 620px; margin: 0 auto; }
+
+  /* Header */
+  header { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .header-text h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-text p { font-size: 13px; color: var(--gray); font-weight: 300; margin-top: 4px; }
+
+  /* PDF button */
+  .pdf-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--black); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 9px 16px; font-family: 'Poppins', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0;
+  }
+  .pdf-btn:hover { opacity: 0.75; }
+  .pdf-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Budget */
+  .label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; display: block; }
+  .budget-section { margin-bottom: 40px; }
+  .budget-input-wrap { display: flex; align-items: center; border-bottom: 2px solid var(--black); padding-bottom: 8px; gap: 4px; }
+  .budget-input-wrap > span { font-size: 28px; font-weight: 600; }
+  .budget-input-wrap input { font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 600; border: none; outline: none; width: 100%; background: transparent; color: var(--black); }
+
+  /* Summary */
+  .summary { background: var(--light); border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .summary-item { display: flex; flex-direction: column; gap: 2px; }
+  .s-label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600; color: var(--gray); }
+  .s-value { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .s-value.negative { color: var(--danger); }
+  .s-value.positive { color: var(--green); }
+
+  /* Progress */
+  .progress-wrap { margin-bottom: 8px; }
+  .progress-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--black); border-radius: 99px; transition: width 0.4s ease, background 0.3s ease; }
+  .progress-fill.over { background: var(--danger); }
+  .progress-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+  .progress-labels span { font-size: 11px; color: var(--gray); }
+
+  /* Alerts */
+  .alert-box { display: none; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 10px; margin-top: 10px; animation: fadeIn 0.3s ease; }
+  .alert-box.visible { display: flex; }
+  .alert-box .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; animation: pulse 1.4s ease-in-out infinite; }
+  .alert-box .alert-content { display: flex; flex-direction: column; gap: 6px; }
+  .alert-box p { font-size: 12.5px; font-weight: 600; }
+  .alert-critical { border: 1.5px solid #ffd0d0; background: #fff5f5; }
+  .alert-critical .dot { background: var(--danger); }
+  .alert-critical p { color: var(--danger); }
+  .alert-due { border: 1.5px solid #fde8b0; background: #fffbf0; }
+  .alert-due .dot { background: var(--orange); }
+  .alert-due p { color: #92400e; }
+  .due-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .due-tag { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: #fde8b0; color: #92400e; }
+  .due-tag.today { background: #ffd0d0; color: var(--danger); }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Category dividers */
+  .category-divider { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gray); margin: 36px 0 6px; display: flex; align-items: center; gap: 8px; }
+  .cat-badge { display: inline-flex; align-items: center; justify-content: center; background: #111; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0; text-transform: none; padding: 2px 7px; border-radius: 6px; line-height: 1.4; }
+
+  /* List header */
+  .list-header { display: grid; grid-template-columns: 26px 1fr 88px 64px 22px; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+  .list-header span { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #bbb; }
+  .lh-amount { text-align: right; }
+  .lh-due { text-align: center; }
+
+  /* Expense rows */
+  .expense-list { display: flex; flex-direction: column; margin-bottom: 12px; }
+  .expense-row { display: grid; grid-template-columns: 26px 1fr 88px 64px 22px; align-items: start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); animation: fadeIn 0.2s ease; transition: opacity 0.2s; }
+  .expense-row.paid { opacity: 0.38; }
+  .expense-row.due-today { background: linear-gradient(90deg, #fff5f5 0%, transparent 70%); }
+  .expense-row.due-soon  { background: linear-gradient(90deg, #fffbf0 0%, transparent 70%); }
+
+  /* Checkbox */
+  .check-btn { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: transparent; flex-shrink: 0; margin-top: 2px; transition: background 0.18s, border-color 0.18s, box-shadow 0.18s; }
+  .check-btn:hover { border-color: var(--neon); box-shadow: 0 0 6px rgba(57,255,20,.35); }
+  .expense-row.paid .check-btn { background: var(--neon); border-color: var(--neon); color: #111; box-shadow: 0 0 10px rgba(57,255,20,.6), 0 0 22px rgba(57,255,20,.2); }
+
+  /* Name col */
+  .name-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .expense-name { font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 500; border: none; outline: none; background: transparent; color: var(--black); width: 100%; }
+  .expense-name::placeholder { color: #ccc; font-weight: 300; }
+  .expense-row.paid .expense-name { text-decoration: line-through; color: var(--gray); }
+
+  /* Due badge */
+  .due-badge { font-size: 10px; font-weight: 600; display: none; }
+  .due-badge.show { display: inline; }
+  .due-badge.ok   { color: #bbb; }
+  .due-badge.soon { color: var(--orange); }
+  .due-badge.today{ color: var(--danger); }
+  .due-badge.over { color: var(--orange); }
+
+  /* Note input */
+  .note-input { font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 400; color: var(--gray); border: none; outline: none; background: transparent; width: 100%; font-style: italic; }
+  .note-input::placeholder { color: #d5d5d5; font-style: italic; }
+
+  /* Amount */
+  .expense-amount { font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; border: none; outline: none; background: transparent; color: var(--black); text-align: right; width: 100%; margin-top: 2px; }
+  .expense-amount::placeholder { color: #ccc; font-weight: 300; }
+
+  /* Due col */
+  .due-col { display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .due-input { font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600; text-align: center; width: 40px; border: none; border-bottom: 1px dashed var(--border); outline: none; background: transparent; color: var(--gray); }
+  .due-input:focus { color: var(--black); border-color: var(--black); }
+  .due-input::placeholder { color: #ddd; font-weight: 300; font-size: 11px; }
+  .due-input::-webkit-inner-spin-button, .due-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .delete-btn { background: none; border: none; cursor: pointer; color: #ddd; font-size: 16px; line-height: 1; transition: color 0.2s; margin-top: 3px; }
+  .delete-btn:hover { color: var(--danger); }
+
+  .add-btn { display: flex; align-items: center; gap: 8px; background: none; border: 1.5px dashed var(--border); border-radius: 10px; padding: 11px 16px; width: 100%; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500; color: var(--gray); cursor: pointer; transition: border-color 0.2s, color 0.2s; margin-bottom: 8px; }
+  .add-btn:hover { border-color: var(--black); color: var(--black); }
+  .add-btn .plus { font-size: 18px; line-height: 1; }
+
+  .status-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .pill { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: var(--light); color: var(--gray); }
+  .pill.green { background: #e8faf0; color: #15803d; }
+
+  footer { margin-top: 56px; text-align: center; font-size: 11px; color: #ccc; font-weight: 300; display: flex; flex-direction: column; gap: 4px; }
+  .footer-credit { font-size: 11px; font-weight: 600; color: #8fff6e; letter-spacing: 0.3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 520px) {
+    body { padding: 28px 16px 60px; }
+    header { flex-direction: column; gap: 16px; }
+    .pdf-btn { align-self: flex-start; }
+    .header-text h1 { font-size: 22px; }
+    .budget-input-wrap > span, .budget-input-wrap input { font-size: 22px; }
+    .summary { grid-template-columns: repeat(2,1fr); gap: 14px; padding: 16px; }
+    .s-value { font-size: 14px; }
+    .list-header { grid-template-columns: 24px 1fr 68px 50px 18px; gap: 6px; }
+    .expense-row { grid-template-columns: 24px 1fr 68px 50px 18px; gap: 6px; }
+    .expense-name { font-size: 13px; }
+    .expense-amount { font-size: 13px; }
+    .due-input { width: 34px; font-size: 11px; }
+    .list-header span { font-size: 9px; letter-spacing: 0.5px; }
+    .add-btn { font-size: 12px; padding: 10px 13px; }
+  }
+  @media (max-width: 360px) {
+    .list-header, .expense-row { grid-template-columns: 22px 1fr 60px 44px 16px; gap: 4px; }
+  }
+
+  /* ── Print / PDF ── */
+  @media print {
+    body { padding: 20px 28px; }
+    .pdf-btn, .add-btn, .delete-btn, .check-btn { display: none !important; }
+    .expense-row { opacity: 1 !important; }
+    .expense-row.paid .expense-name { color: var(--gray); }
+    .note-input, .expense-name, .expense-amount, .due-input, .budget-input-wrap input {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .alert-box { display: none !important; }
+    .print-check { display: inline-block !important; }
+    .summary { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .list-header { grid-template-columns: 20px 1fr 88px 64px; }
+    .expense-row { grid-template-columns: 20px 1fr 88px 64px; }
+    footer { display: none; }
+    .status-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-text">
+      <h1>Gastos Fijos</h1>
+      <p>Tu presupuesto mensual en un vistazo</p>
+    </div>
+    <button class="pdf-btn" onclick="exportPDF()">
+      <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12-4-4m4 4 4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+      Exportar PDF
+    </button>
+  </header>
+
+  <div class="budget-section">
+    <span class="label">Dinero disponible</span>
+    <div class="budget-input-wrap">
+      <span>$</span>
+      <input type="number" id="budget" placeholder="0" oninput="update()">
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="summary-item">
+      <span class="s-label">Gastos</span>
+      <span class="s-value" id="total-spent">$0</span>
+    </div>
+    <div class="summary-item">
+      <span class="s-label">Pagado</span>
+      <span class="s-value positive" id="total-paid">$0</span>
+    </div>
+    <div class="summary-item">
+      <span class="s-label">Disponible</span>
+      <span class="s-value" id="remaining">$0</span>
+    </div>
+    <div class="summary-item">
+      <span class="s-label">Usado</span>
+      <span class="s-value" id="pct">0%</span>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-labels">
+      <span>$0</span>
+      <span id="progress-budget-label">$0</span>
+    </div>
+  </div>
+
+  <div class="alert-box alert-critical" id="alert-critical">
+    <span class="dot"></span>
+    <div class="alert-content">
+      <p>Estas en punto critico — superaste el 75% de tu presupuesto</p>
+    </div>
+  </div>
+
+  <div class="alert-box alert-due" id="alert-due">
+    <span class="dot"></span>
+    <div class="alert-content">
+      <p>Proximos vencimientos sin pagar</p>
+      <div class="due-tags" id="due-tags"></div>
+    </div>
+  </div>
+
+  <!-- Fixed expenses -->
+  <div class="category-divider"><span class="cat-badge">$</span> Gastos fijos</div>
+  <div class="list-header">
+    <span></span><span>Concepto</span><span class="lh-amount">Monto</span><span class="lh-due">Vence</span><span></span>
+  </div>
+  <div class="expense-list" id="fixed-list"></div>
+  <button class="add-btn" onclick="addRow('fixed-list')"><span class="plus">+</span> Agregar gasto fijo</button>
+
+  <!-- Other expenses -->
+  <div class="category-divider"><span class="cat-badge">+</span> Otros gastos</div>
+  <div class="list-header">
+    <span></span><span>Concepto</span><span class="lh-amount">Monto</span><span class="lh-due">Vence</span><span></span>
+  </div>
+  <div class="expense-list" id="other-list"></div>
+  <button class="add-btn" onclick="addRow('other-list')"><span class="plus">+</span> Agregar otro gasto</button>
+
+  <div class="status-bar" id="status-bar"></div>
+
+  <footer>
+    <span>Todos los datos se guardan en tu navegador</span>
+    <span class="footer-credit">Creado por Exequiel Fernandez Montini</span>
+  </footer>
+</div>
+
+<script>
+const TODAY = new Date().getDate();
+const MONTH = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+
+const DEFAULTS = [
+  { name: 'Alquiler',     amount: '', due: '', paid: false, note: '' },
+  { name: 'Expensas',     amount: '', due: '', paid: false, note: '' },
+  { name: 'Luz',          amount: '', due: '', paid: false, note: '' },
+  { name: 'Gas',          amount: '', due: '', paid: false, note: '' },
+  { name: 'Celular',      amount: '', due: '', paid: false, note: '' },
+  { name: 'WiFi',         amount: '', due: '', paid: false, note: '' },
+  { name: 'Cable',        amount: '', due: '', paid: false, note: '' },
+  { name: 'Streaming',    amount: '', due: '', paid: false, note: '' },
+  { name: 'Supermercado', amount: '', due: '', paid: false, note: '' },
+  { name: 'Gimnasio',     amount: '', due: '', paid: false, note: '' },
+];
+
+function fmt(n) {
+  return '$' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function getDueStatus(dayStr) {
+  const d = parseInt(dayStr);
+  if (!dayStr || isNaN(d) || d < 1 || d > 31) return null;
+  const diff = d - TODAY;
+  if (diff === 0)             return 'today';
+  if (diff > 0 && diff <= 4)  return 'soon';
+  if (diff < 0 && diff >= -3) return 'over';
+  return 'ok';
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function addRow(listId, item = {}) {
+  const { name = '', amount = '', due = '', paid = false, note = '' } = item;
+  const row = document.createElement('div');
+  row.className = 'expense-row' + (paid ? ' paid' : '');
+  row.innerHTML = `
+    <button class="check-btn" onclick="togglePaid(this)">${paid ? '✓' : ''}</button>
+    <div class="name-col">
+      <input class="expense-name" type="text" placeholder="Concepto" value="${escHtml(name)}" oninput="update()">
+      <input class="note-input" type="text" placeholder="Agregar nota..." value="${escHtml(note)}" oninput="save()">
+      <span class="due-badge"></span>
+    </div>
+    <input class="expense-amount" type="number" placeholder="0" value="${escHtml(amount)}" oninput="update()">
+    <div class="due-col">
+      <input class="due-input" type="number" min="1" max="31" placeholder="—" value="${escHtml(due)}" oninput="update()">
+    </div>
+    <button class="delete-btn" onclick="removeRow(this)">×</button>
+  `;
+  document.getElementById(listId).appendChild(row);
+  update();
+}
+
+function removeRow(btn) { btn.closest('.expense-row').remove(); update(); }
+
+function togglePaid(btn) {
+  const row = btn.closest('.expense-row');
+  const now = row.classList.toggle('paid');
+  btn.textContent = now ? '✓' : '';
+  update();
+}
+
+function getRows(listId) {
+  return [...document.querySelectorAll(`#${listId} .expense-row`)].map(row => ({
+    name:   row.querySelector('.expense-name').value,
+    amount: row.querySelector('.expense-amount').value,
+    due:    row.querySelector('.due-input').value,
+    paid:   row.classList.contains('paid'),
+    note:   row.querySelector('.note-input').value,
+  }));
+}
+
+function save() {
+  localStorage.setItem('gastos_v4', JSON.stringify({
+    budget: document.getElementById('budget').value,
+    fixed:  getRows('fixed-list'),
+    other:  getRows('other-list'),
+  }));
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem('gastos_v4');
+    if (raw) {
+      const d = JSON.parse(raw);
+      document.getElementById('budget').value = d.budget || '';
+      renderList('fixed-list', d.fixed?.length ? d.fixed : DEFAULTS);
+      renderList('other-list', d.other || []);
+      return;
+    }
+  } catch(e) {}
+  renderList('fixed-list', DEFAULTS);
+  renderList('other-list', []);
+  update();
+}
+
+function renderList(id, items) {
+  document.getElementById(id).innerHTML = '';
+  items.forEach(i => addRow(id, i));
+}
+
+function update() {
+  const budget = parseFloat(document.getElementById('budget').value) || 0;
+  let total = 0, paidAmt = 0;
+  const upcoming = [];
+
+  document.querySelectorAll('.expense-row').forEach(row => {
+    const amt    = parseFloat(row.querySelector('.expense-amount').value) || 0;
+    const isPaid = row.classList.contains('paid');
+    const dueVal = row.querySelector('.due-input').value;
+    const name   = row.querySelector('.expense-name').value || 'Sin nombre';
+    const status = getDueStatus(dueVal);
+
+    total += amt;
+    if (isPaid) paidAmt += amt;
+
+    row.classList.remove('due-today', 'due-soon');
+    if (!isPaid) {
+      if (status === 'today') row.classList.add('due-today');
+      else if (status === 'soon') row.classList.add('due-soon');
+    }
+
+    const badge = row.querySelector('.due-badge');
+    badge.className = 'due-badge';
+    if (dueVal && status) {
+      badge.classList.add('show', status);
+      const diff = parseInt(dueVal) - TODAY;
+      if (status === 'today')      badge.textContent = '⚠ Vence hoy';
+      else if (status === 'soon')  badge.textContent = `Vence en ${diff} dia${diff !== 1 ? 's' : ''}`;
+      else if (status === 'over')  badge.textContent = `Vencio el dia ${dueVal}`;
+      else                         badge.textContent = `Dia ${dueVal}`;
+    }
+
+    if (!isPaid && (status === 'today' || status === 'soon')) {
+      upcoming.push({ name, day: parseInt(dueVal), status });
+    }
+  });
+
+  const remaining = budget - total;
+  const realPct   = budget > 0 ? (total / budget) * 100 : 0;
+  const over      = budget > 0 && total > budget;
+
+  document.getElementById('total-spent').textContent = fmt(total);
+  document.getElementById('total-paid').textContent  = fmt(paidAmt);
+
+  const remEl = document.getElementById('remaining');
+  remEl.textContent = (remaining < 0 ? '-' : '') + fmt(remaining);
+  remEl.className = 's-value ' + (remaining < 0 ? 'negative' : remaining > 0 ? 'positive' : '');
+
+  const pctEl = document.getElementById('pct');
+  pctEl.textContent = budget > 0 ? Math.round(realPct) + '%' : '0%';
+  pctEl.className   = 's-value' + (over ? ' negative' : '');
+
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = Math.min(realPct, 100) + '%';
+  fill.className   = 'progress-fill' + (over ? ' over' : '');
+  document.getElementById('progress-budget-label').textContent = fmt(budget);
+
+  document.getElementById('alert-critical').classList.toggle('visible', realPct >= 75);
+
+  const dueAlert = document.getElementById('alert-due');
+  const dueTags  = document.getElementById('due-tags');
+  if (upcoming.length) {
+    dueAlert.classList.add('visible');
+    dueTags.innerHTML = upcoming
+      .sort((a,b) => a.day - b.day)
+      .map(u => `<span class="due-tag ${u.status === 'today' ? 'today' : ''}">${u.name} — dia ${u.day}</span>`)
+      .join('');
+  } else {
+    dueAlert.classList.remove('visible');
+  }
+
+  const allRows  = document.querySelectorAll('.expense-row').length;
+  const paidRows = document.querySelectorAll('.expense-row.paid').length;
+  const bar = document.getElementById('status-bar');
+  if (allRows > 0) {
+    bar.innerHTML = `
+      <span class="pill ${paidRows === allRows ? 'green' : ''}">${paidRows}/${allRows} pagados</span>
+      ${paidAmt > 0 ? `<span class="pill green">Pagado: ${fmt(paidAmt)}</span>` : ''}
+      ${total - paidAmt > 0 ? `<span class="pill">Pendiente: ${fmt(total - paidAmt)}</span>` : ''}
+    `;
+  } else { bar.innerHTML = ''; }
+
+  save();
+}
+
+function exportPDF() {
+  // Set a print-friendly title with month
+  const orig = document.title;
+  document.title = `Gastos Fijos — ${MONTH}`;
+  window.print();
+  document.title = orig;
+}
+
+load();
+</script>
+</body>
+</html>
