@@ -7,37 +7,62 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --black: #111;
-    --gray: #888;
-    --light: #f4f4f4;
-    --border: #e8e8e8;
-    --danger: #e05252;
-    --orange: #f59e0b;
-    --green: #2ecc71;
-    --neon: #39ff14;
+    --black: #111; --gray: #888; --light: #f4f4f4;
+    --border: #e8e8e8; --danger: #e05252; --orange: #f59e0b;
+    --green: #2ecc71; --neon: #39ff14;
   }
-
   body { font-family: 'Poppins', sans-serif; background: #fff; color: var(--black); min-height: 100vh; padding: 48px 24px 80px; }
-  .container { max-width: 620px; margin: 0 auto; }
+  .container { max-width: 640px; margin: 0 auto; }
 
   /* Header */
-  header { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
+  header { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
   .header-text h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
   .header-text p { font-size: 13px; color: var(--gray); font-weight: 300; margin-top: 4px; }
+  .header-btns { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: center; }
 
-  /* PDF button */
-  .pdf-btn {
+  /* Action buttons */
+  .action-btn {
     display: flex; align-items: center; gap: 6px;
-    background: var(--black); color: #fff;
     border: none; border-radius: 10px;
-    padding: 9px 16px; font-family: 'Poppins', sans-serif;
+    padding: 9px 14px; font-family: 'Poppins', sans-serif;
     font-size: 12px; font-weight: 600; cursor: pointer;
-    transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0;
+    transition: opacity 0.2s; white-space: nowrap;
   }
-  .pdf-btn:hover { opacity: 0.75; }
-  .pdf-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .action-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .action-btn:hover { opacity: 0.72; }
+  .btn-dark  { background: var(--black); color: #fff; }
+  .btn-light { background: var(--light); color: var(--black); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning svg { animation: spin 0.5s linear; }
+
+  /* ── Month picker ── */
+  .month-btn { position: relative; }
+  .month-dropdown {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0;
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+    z-index: 100; min-width: 230px;
+    animation: fadeIn 0.18s ease;
+  }
+  .month-btn.open .month-dropdown { display: block; }
+  .month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .month-opt {
+    font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 8px 6px; border-radius: 8px; border: none;
+    background: transparent; cursor: pointer; text-align: center;
+    color: var(--black); transition: background 0.15s;
+  }
+  .month-opt:hover { background: var(--light); }
+  .month-opt.active { background: var(--black); color: #fff; font-weight: 700; }
+  .month-year-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 8px; }
+  .year-nav { display: flex; align-items: center; gap: 6px; }
+  .year-btn { background: none; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; color: var(--gray); padding: 2px 6px; border-radius: 6px; transition: background 0.15s; }
+  .year-btn:hover { background: var(--light); color: var(--black); }
+  .year-label { font-size: 13px; font-weight: 700; min-width: 42px; text-align: center; }
+  .month-current-label { font-size: 11px; font-weight: 600; color: var(--gray); letter-spacing: 0.3px; }
 
   /* Budget */
   .label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; display: block; }
@@ -45,6 +70,9 @@
   .budget-input-wrap { display: flex; align-items: center; border-bottom: 2px solid var(--black); padding-bottom: 8px; gap: 4px; }
   .budget-input-wrap > span { font-size: 28px; font-weight: 600; }
   .budget-input-wrap input { font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 600; border: none; outline: none; width: 100%; background: transparent; color: var(--black); }
+
+  /* Month indicator under budget */
+  .month-indicator { font-size: 12px; font-weight: 600; color: var(--gray); margin-top: 6px; letter-spacing: 0.2px; }
 
   /* Summary */
   .summary { background: var(--light); border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -98,34 +126,25 @@
   .expense-row.due-today { background: linear-gradient(90deg, #fff5f5 0%, transparent 70%); }
   .expense-row.due-soon  { background: linear-gradient(90deg, #fffbf0 0%, transparent 70%); }
 
-  /* Checkbox */
   .check-btn { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: transparent; flex-shrink: 0; margin-top: 2px; transition: background 0.18s, border-color 0.18s, box-shadow 0.18s; }
   .check-btn:hover { border-color: var(--neon); box-shadow: 0 0 6px rgba(57,255,20,.35); }
   .expense-row.paid .check-btn { background: var(--neon); border-color: var(--neon); color: #111; box-shadow: 0 0 10px rgba(57,255,20,.6), 0 0 22px rgba(57,255,20,.2); }
 
-  /* Name col */
   .name-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .expense-name { font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 500; border: none; outline: none; background: transparent; color: var(--black); width: 100%; }
   .expense-name::placeholder { color: #ccc; font-weight: 300; }
   .expense-row.paid .expense-name { text-decoration: line-through; color: var(--gray); }
-
-  /* Due badge */
   .due-badge { font-size: 10px; font-weight: 600; display: none; }
   .due-badge.show { display: inline; }
   .due-badge.ok   { color: #bbb; }
   .due-badge.soon { color: var(--orange); }
   .due-badge.today{ color: var(--danger); }
   .due-badge.over { color: var(--orange); }
-
-  /* Note input */
-  .note-input { font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 400; color: var(--gray); border: none; outline: none; background: transparent; width: 100%; font-style: italic; }
+  .note-input { font-family: 'Poppins', sans-serif; font-size: 10.5px; color: var(--gray); border: none; outline: none; background: transparent; width: 100%; font-style: italic; }
   .note-input::placeholder { color: #d5d5d5; font-style: italic; }
 
-  /* Amount */
   .expense-amount { font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; border: none; outline: none; background: transparent; color: var(--black); text-align: right; width: 100%; margin-top: 2px; }
   .expense-amount::placeholder { color: #ccc; font-weight: 300; }
-
-  /* Due col */
   .due-col { display: flex; align-items: center; justify-content: center; margin-top: 2px; }
   .due-input { font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600; text-align: center; width: 40px; border: none; border-bottom: 1px dashed var(--border); outline: none; background: transparent; color: var(--gray); }
   .due-input:focus { color: var(--black); border-color: var(--black); }
@@ -143,46 +162,68 @@
   .pill { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: var(--light); color: var(--gray); }
   .pill.green { background: #e8faf0; color: #15803d; }
 
+  /* Card purchases */
+  .card-list { display: flex; flex-direction: column; margin-bottom: 12px; }
+  .card-header { display: grid; grid-template-columns: 1fr 90px 54px 54px 90px 22px; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+  .card-header span { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #bbb; }
+  .card-header .ch-r { text-align: right; }
+  .card-row { display: grid; grid-template-columns: 1fr 90px 54px 54px 90px 22px; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); animation: fadeIn 0.2s ease; }
+  .card-input { font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500; border: none; outline: none; background: transparent; color: var(--black); width: 100%; }
+  .card-input::placeholder { color: #ccc; font-weight: 300; }
+  .card-input.right { text-align: right; font-weight: 600; }
+  .card-input.center { text-align: center; }
+  .card-input::-webkit-inner-spin-button, .card-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .cuota-badge { font-size: 12px; font-weight: 700; color: var(--black); text-align: right; }
+  .cuota-sub { font-size: 10px; font-weight: 400; color: var(--gray); text-align: right; }
+  .card-summary { background: #f8f8f8; border-radius: 12px; padding: 14px 18px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .card-summary-item { display: flex; flex-direction: column; gap: 1px; }
+  .card-summary-item .cs-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); }
+  .card-summary-item .cs-value { font-size: 16px; font-weight: 700; color: var(--black); }
+
   footer { margin-top: 56px; text-align: center; font-size: 11px; color: #ccc; font-weight: 300; display: flex; flex-direction: column; gap: 4px; }
   .footer-credit { font-size: 11px; font-weight: 600; color: #8fff6e; letter-spacing: 0.3px; }
 
-  /* ── Responsive ── */
-  @media (max-width: 520px) {
+  /* Copy banner */
+  .copy-banner { display: none; align-items: center; justify-content: space-between; gap: 12px; background: #f8fff4; border: 1.5px solid #c6f6c6; border-radius: 12px; padding: 14px 18px; margin-bottom: 28px; animation: fadeIn 0.3s ease; flex-wrap: wrap; }
+  .copy-banner.visible { display: flex; }
+  .copy-banner-text { display: flex; flex-direction: column; gap: 2px; }
+  .copy-banner-text strong { font-size: 13px; font-weight: 700; color: #166534; }
+  .copy-banner-text span { font-size: 11px; color: #15803d; font-weight: 400; }
+  .copy-banner-btn { display: flex; align-items: center; gap: 6px; background: #166534; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+  .copy-banner-btn:hover { opacity: 0.8; }
+  .copy-banner-dismiss { background: none; border: none; color: #86efac; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .copy-banner-dismiss:hover { color: #166534; }
+
+  /* Responsive */
+  @media (max-width: 560px) {
     body { padding: 28px 16px 60px; }
-    header { flex-direction: column; gap: 16px; }
-    .pdf-btn { align-self: flex-start; }
+    header { flex-direction: column; gap: 12px; }
     .header-text h1 { font-size: 22px; }
     .budget-input-wrap > span, .budget-input-wrap input { font-size: 22px; }
     .summary { grid-template-columns: repeat(2,1fr); gap: 14px; padding: 16px; }
     .s-value { font-size: 14px; }
-    .list-header { grid-template-columns: 24px 1fr 68px 50px 18px; gap: 6px; }
-    .expense-row { grid-template-columns: 24px 1fr 68px 50px 18px; gap: 6px; }
+    .list-header { grid-template-columns: 26px 1fr 76px 22px; gap: 8px; }
+    .expense-row { grid-template-columns: 26px 1fr 76px 22px; gap: 8px; }
+    .lh-due, .due-col { display: none; }
     .expense-name { font-size: 13px; }
     .expense-amount { font-size: 13px; }
-    .due-input { width: 34px; font-size: 11px; }
-    .list-header span { font-size: 9px; letter-spacing: 0.5px; }
+    .list-header span { font-size: 9px; }
     .add-btn { font-size: 12px; padding: 10px 13px; }
+    .card-header { grid-template-columns: 1fr 76px 44px 76px 18px; }
+    .card-row    { grid-template-columns: 1fr 76px 44px 76px 18px; }
+    .card-header .hide-mob, .card-row .hide-mob { display: none; }
+    .month-dropdown { right: 0; left: auto; min-width: 210px; }
   }
-  @media (max-width: 360px) {
-    .list-header, .expense-row { grid-template-columns: 22px 1fr 60px 44px 16px; gap: 4px; }
+  @media (max-width: 380px) {
+    .list-header, .expense-row { grid-template-columns: 24px 1fr 68px 18px; gap: 5px; }
   }
 
-  /* ── Print / PDF ── */
   @media print {
     body { padding: 20px 28px; }
-    .pdf-btn, .add-btn, .delete-btn, .check-btn { display: none !important; }
+    .action-btn, .add-btn, .delete-btn, .check-btn { display: none !important; }
     .expense-row { opacity: 1 !important; }
-    .expense-row.paid .expense-name { color: var(--gray); }
-    .note-input, .expense-name, .expense-amount, .due-input, .budget-input-wrap input {
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .alert-box { display: none !important; }
-    .print-check { display: inline-block !important; }
+    .alert-box, .status-bar, footer { display: none !important; }
     .summary { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .list-header { grid-template-columns: 20px 1fr 88px 64px; }
-    .expense-row { grid-template-columns: 20px 1fr 88px 64px; }
-    footer { display: none; }
-    .status-bar { display: none; }
   }
 </style>
 </head>
@@ -194,10 +235,34 @@
       <h1>Gastos Fijos</h1>
       <p>Tu presupuesto mensual en un vistazo</p>
     </div>
-    <button class="pdf-btn" onclick="exportPDF()">
-      <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12-4-4m4 4 4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
-      Exportar PDF
-    </button>
+    <div class="header-btns">
+      <button class="action-btn btn-light" id="refresh-btn" onclick="refreshApp()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Actualizar
+      </button>
+
+      <!-- Month picker -->
+      <div class="action-btn btn-light month-btn" id="month-btn" onclick="toggleMonthPicker(event)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="month-btn-label">Calendario</span>
+        <div class="month-dropdown" id="month-dropdown" onclick="event.stopPropagation()">
+          <div class="month-year-row">
+            <span class="month-current-label">Seleccionar mes</span>
+            <div class="year-nav">
+              <button class="year-btn" onclick="changeYear(-1)">&#8592;</button>
+              <span class="year-label" id="year-label">2025</span>
+              <button class="year-btn" onclick="changeYear(1)">&#8594;</button>
+            </div>
+          </div>
+          <div class="month-grid" id="month-grid"></div>
+        </div>
+      </div>
+
+      <button class="action-btn btn-dark" onclick="exportPDF()">
+        <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12-4-4m4 4 4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+        PDF
+      </button>
+    </div>
   </header>
 
   <div class="budget-section">
@@ -206,69 +271,61 @@
       <span>$</span>
       <input type="number" id="budget" placeholder="0" oninput="update()">
     </div>
+    <div class="month-indicator" id="month-indicator"></div>
   </div>
 
+
+  <!-- Copy previous month banner -->
+  <div class="copy-banner" id="copy-banner">
+    <div class="copy-banner-text">
+      <strong>Este mes esta vacio</strong>
+      <span id="copy-banner-desc">Podes copiar los datos del mes anterior</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="copy-banner-btn" onclick="copyPrevMonth()">Copiar mes anterior</button>
+      <button class="copy-banner-dismiss" onclick="dismissBanner()" title="Cerrar">x</button>
+    </div>
+  </div>
   <div class="summary">
-    <div class="summary-item">
-      <span class="s-label">Gastos</span>
-      <span class="s-value" id="total-spent">$0</span>
-    </div>
-    <div class="summary-item">
-      <span class="s-label">Pagado</span>
-      <span class="s-value positive" id="total-paid">$0</span>
-    </div>
-    <div class="summary-item">
-      <span class="s-label">Disponible</span>
-      <span class="s-value" id="remaining">$0</span>
-    </div>
-    <div class="summary-item">
-      <span class="s-label">Usado</span>
-      <span class="s-value" id="pct">0%</span>
-    </div>
+    <div class="summary-item"><span class="s-label">Gastos</span><span class="s-value" id="total-spent">$0</span></div>
+    <div class="summary-item"><span class="s-label">Pagado</span><span class="s-value positive" id="total-paid">$0</span></div>
+    <div class="summary-item"><span class="s-label">Disponible</span><span class="s-value" id="remaining">$0</span></div>
+    <div class="summary-item"><span class="s-label">Usado</span><span class="s-value" id="pct">0%</span></div>
   </div>
 
   <div class="progress-wrap">
-    <div class="progress-track">
-      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-    </div>
-    <div class="progress-labels">
-      <span>$0</span>
-      <span id="progress-budget-label">$0</span>
-    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-labels"><span>$0</span><span id="progress-budget-label">$0</span></div>
   </div>
 
   <div class="alert-box alert-critical" id="alert-critical">
     <span class="dot"></span>
-    <div class="alert-content">
-      <p>Estas en punto critico — superaste el 75% de tu presupuesto</p>
-    </div>
+    <div class="alert-content"><p>Estas en punto critico — superaste el 75% de tu presupuesto</p></div>
   </div>
-
   <div class="alert-box alert-due" id="alert-due">
     <span class="dot"></span>
-    <div class="alert-content">
-      <p>Proximos vencimientos sin pagar</p>
-      <div class="due-tags" id="due-tags"></div>
-    </div>
+    <div class="alert-content"><p>Proximos vencimientos sin pagar</p><div class="due-tags" id="due-tags"></div></div>
   </div>
 
-  <!-- Fixed expenses -->
   <div class="category-divider"><span class="cat-badge">$</span> Gastos fijos</div>
-  <div class="list-header">
-    <span></span><span>Concepto</span><span class="lh-amount">Monto</span><span class="lh-due">Vence</span><span></span>
-  </div>
+  <div class="list-header"><span></span><span>Concepto</span><span class="lh-amount">Monto</span><span class="lh-due">Vence</span><span></span></div>
   <div class="expense-list" id="fixed-list"></div>
   <button class="add-btn" onclick="addRow('fixed-list')"><span class="plus">+</span> Agregar gasto fijo</button>
 
-  <!-- Other expenses -->
   <div class="category-divider"><span class="cat-badge">+</span> Otros gastos</div>
-  <div class="list-header">
-    <span></span><span>Concepto</span><span class="lh-amount">Monto</span><span class="lh-due">Vence</span><span></span>
-  </div>
+  <div class="list-header"><span></span><span>Concepto</span><span class="lh-amount">Monto</span><span class="lh-due">Vence</span><span></span></div>
   <div class="expense-list" id="other-list"></div>
   <button class="add-btn" onclick="addRow('other-list')"><span class="plus">+</span> Agregar otro gasto</button>
 
   <div class="status-bar" id="status-bar"></div>
+
+  <div class="category-divider"><span class="cat-badge">TC</span> Compras con tarjeta</div>
+  <div class="card-header">
+    <span>Concepto</span><span class="ch-r">Total</span><span class="ch-r hide-mob">Cuotas</span><span class="ch-r">Pagadas</span><span class="ch-r">Por mes</span><span></span>
+  </div>
+  <div class="card-list" id="card-list"></div>
+  <button class="add-btn" onclick="addCardRow()"><span class="plus">+</span> Agregar compra</button>
+  <div class="card-summary" id="card-summary" style="display:none"></div>
 
   <footer>
     <span>Todos los datos se guardan en tu navegador</span>
@@ -277,45 +334,100 @@
 </div>
 
 <script>
-const TODAY = new Date().getDate();
-const MONTH = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+const TODAY  = new Date().getDate();
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// Active month key: "YYYY-MM"
+let activeYear  = new Date().getFullYear();
+let activeMonth = new Date().getMonth(); // 0-based
+let pickerYear  = activeYear;
+
+function monthKey(y, m) { return `gastos_v5_${y}_${String(m+1).padStart(2,'0')}`; }
+function activeKey()    { return monthKey(activeYear, activeMonth); }
 
 const DEFAULTS = [
-  { name: 'Alquiler',          amount: '', due: '', paid: false, note: '' },
-  { name: 'Expensas',          amount: '', due: '', paid: false, note: '' },
-  { name: 'Luz',               amount: '', due: '', paid: false, note: '' },
-  { name: 'Gas',               amount: '', due: '', paid: false, note: '' },
-  { name: 'Celular',           amount: '', due: '', paid: false, note: '' },
-  { name: 'WiFi',              amount: '', due: '', paid: false, note: '' },
-  { name: 'Cable',             amount: '', due: '', paid: false, note: '' },
-  { name: 'Streaming',         amount: '', due: '', paid: false, note: '' },
-  { name: 'Supermercado',      amount: '', due: '', paid: false, note: '' },
-  { name: 'Gimnasio',          amount: '', due: '', paid: false, note: '' },
-  { name: 'Pago de tarjetas',  amount: '', due: '', paid: false, note: '' },
+  { name: 'Alquiler',         amount: '', due: '', paid: false, note: '' },
+  { name: 'Expensas',         amount: '', due: '', paid: false, note: '' },
+  { name: 'Luz',              amount: '', due: '', paid: false, note: '' },
+  { name: 'Gas',              amount: '', due: '', paid: false, note: '' },
+  { name: 'Celular',          amount: '', due: '', paid: false, note: '' },
+  { name: 'WiFi',             amount: '', due: '', paid: false, note: '' },
+  { name: 'Cable',            amount: '', due: '', paid: false, note: '' },
+  { name: 'Streaming',        amount: '', due: '', paid: false, note: '' },
+  { name: 'Supermercado',     amount: '', due: '', paid: false, note: '' },
+  { name: 'Gimnasio',         amount: '', due: '', paid: false, note: '' },
+  { name: 'Pago de tarjetas', amount: '', due: '', paid: false, note: '' },
 ];
 
-function fmt(n) {
-  return '$' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
+function fmt(n) { return '$' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function getDueStatus(dayStr) {
   const d = parseInt(dayStr);
   if (!dayStr || isNaN(d) || d < 1 || d > 31) return null;
   const diff = d - TODAY;
-  if (diff === 0)             return 'today';
-  if (diff > 0 && diff <= 4)  return 'soon';
+  if (diff === 0) return 'today';
+  if (diff > 0 && diff <= 4) return 'soon';
   if (diff < 0 && diff >= -3) return 'over';
   return 'ok';
 }
 
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* ── Month picker ── */
+function buildMonthGrid() {
+  document.getElementById('year-label').textContent = pickerYear;
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
+  MONTHS.forEach((name, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'month-opt' + (i === activeMonth && pickerYear === activeYear ? ' active' : '');
+    btn.textContent = name.substring(0,3);
+    btn.title = name;
+    // Dot if data exists
+    const key = monthKey(pickerYear, i);
+    if (localStorage.getItem(key)) btn.style.fontWeight = '700';
+    btn.onclick = () => switchMonth(pickerYear, i);
+    grid.appendChild(btn);
+  });
+}
 
+function changeYear(delta) {
+  pickerYear += delta;
+  buildMonthGrid();
+}
+
+function toggleMonthPicker(e) {
+  e.stopPropagation();
+  pickerYear = activeYear;
+  buildMonthGrid();
+  document.getElementById('month-btn').classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('month-btn').classList.remove('open');
+});
+
+function switchMonth(y, m) {
+  save(); // save current before switching
+  activeYear  = y;
+  activeMonth = m;
+  document.getElementById('month-btn').classList.remove('open');
+  loadMonth();
+}
+
+function updateMonthUI() {
+  const label = `${MONTHS[activeMonth]} ${activeYear}`;
+  document.getElementById('month-btn-label').textContent = label;
+  document.getElementById('month-indicator').textContent = label;
+  document.title = `Gastos Fijos — ${label}`;
+}
+
+/* ── Expense rows ── */
 function addRow(listId, item = {}) {
   const { name = '', amount = '', due = '', paid = false, note = '' } = item;
   const row = document.createElement('div');
   row.className = 'expense-row' + (paid ? ' paid' : '');
   row.innerHTML = `
-    <button class="check-btn" onclick="togglePaid(this)">${paid ? '✓' : ''}</button>
+    <button class="check-btn" onclick="togglePaid(this)">${paid ? '&#10003;' : ''}</button>
     <div class="name-col">
       <input class="expense-name" type="text" placeholder="Concepto" value="${escHtml(name)}" oninput="update()">
       <input class="note-input" type="text" placeholder="Agregar nota..." value="${escHtml(note)}" oninput="save()">
@@ -325,21 +437,18 @@ function addRow(listId, item = {}) {
     <div class="due-col">
       <input class="due-input" type="number" min="1" max="31" placeholder="—" value="${escHtml(due)}" oninput="update()">
     </div>
-    <button class="delete-btn" onclick="removeRow(this)">×</button>
+    <button class="delete-btn" onclick="removeRow(this)">&#215;</button>
   `;
   document.getElementById(listId).appendChild(row);
   update();
 }
-
 function removeRow(btn) { btn.closest('.expense-row').remove(); update(); }
-
 function togglePaid(btn) {
   const row = btn.closest('.expense-row');
   const now = row.classList.toggle('paid');
-  btn.textContent = now ? '✓' : '';
+  btn.innerHTML = now ? '&#10003;' : '';
   update();
 }
-
 function getRows(listId) {
   return [...document.querySelectorAll(`#${listId} .expense-row`)].map(row => ({
     name:   row.querySelector('.expense-name').value,
@@ -350,28 +459,135 @@ function getRows(listId) {
   }));
 }
 
+/* ── Card rows ── */
+function addCardRow(item = {}) {
+  const { concept = '', total = '', cuotas = '', pagadas = '' } = item;
+  const row = document.createElement('div');
+  row.className = 'card-row';
+  row.innerHTML = `
+    <input class="card-input" type="text" placeholder="Ej: Heladera" value="${escHtml(concept)}" oninput="updateCards()">
+    <input class="card-input right" type="number" placeholder="0" value="${escHtml(total)}" oninput="updateCards()">
+    <input class="card-input center hide-mob" type="number" placeholder="0" min="1" value="${escHtml(cuotas)}" oninput="updateCards()">
+    <input class="card-input center" type="number" placeholder="0" min="0" value="${escHtml(pagadas)}" oninput="updateCards()">
+    <div class="cuota-col">
+      <div class="cuota-badge">—</div>
+      <div class="cuota-sub"></div>
+    </div>
+    <button class="delete-btn" onclick="removeCardRow(this)">&#215;</button>
+  `;
+  document.getElementById('card-list').appendChild(row);
+  updateCards();
+}
+function removeCardRow(btn) { btn.closest('.card-row').remove(); updateCards(); }
+function getCardRows() {
+  return [...document.querySelectorAll('.card-row')].map(row => ({
+    concept: row.querySelectorAll('.card-input')[0].value,
+    total:   row.querySelectorAll('.card-input')[1].value,
+    cuotas:  row.querySelectorAll('.card-input')[2].value,
+    pagadas: row.querySelectorAll('.card-input')[3].value,
+  }));
+}
+function updateCards() {
+  let totalMensual = 0, totalDeuda = 0;
+  document.querySelectorAll('.card-row').forEach(row => {
+    const inputs  = row.querySelectorAll('.card-input');
+    const total   = parseFloat(inputs[1].value) || 0;
+    const cuotas  = parseInt(inputs[2].value) || 0;
+    const pagadas = parseInt(inputs[3].value) || 0;
+    const badge   = row.querySelector('.cuota-badge');
+    const sub     = row.querySelector('.cuota-sub');
+    if (total > 0 && cuotas > 0) {
+      const porMes    = total / cuotas;
+      const restantes = Math.max(cuotas - pagadas, 0);
+      badge.textContent = fmt(porMes);
+      sub.textContent   = restantes > 0 ? `${restantes} cuota${restantes !== 1 ? 's' : ''} restante${restantes !== 1 ? 's' : ''}` : 'Saldada';
+      sub.style.color   = restantes === 0 ? 'var(--green)' : 'var(--gray)';
+      totalMensual += porMes;
+      totalDeuda   += porMes * restantes;
+    } else { badge.textContent = '—'; sub.textContent = ''; }
+  });
+  const summary = document.getElementById('card-summary');
+  const rows = document.querySelectorAll('.card-row').length;
+  if (rows > 0) {
+    summary.style.display = 'flex';
+    summary.innerHTML = `
+      <div class="card-summary-item"><span class="cs-label">Compras</span><span class="cs-value">${rows}</span></div>
+      <div class="card-summary-item"><span class="cs-label">Pago mensual</span><span class="cs-value">${fmt(totalMensual)}</span></div>
+      <div class="card-summary-item"><span class="cs-label">Deuda total</span><span class="cs-value">${fmt(totalDeuda)}</span></div>
+    `;
+  } else { summary.style.display = 'none'; }
+  save();
+}
+
+/* ── Persistence ── */
 function save() {
-  localStorage.setItem('gastos_v4', JSON.stringify({
+  localStorage.setItem(activeKey(), JSON.stringify({
     budget: document.getElementById('budget').value,
     fixed:  getRows('fixed-list'),
     other:  getRows('other-list'),
+    cards:  getCardRows(),
   }));
 }
 
-function load() {
+function prevMonthKey() {
+  let y = activeYear, m = activeMonth - 1;
+  if (m < 0) { m = 11; y--; }
+  return { key: monthKey(y, m), y, m };
+}
+
+function loadMonth() {
+  updateMonthUI();
+  document.getElementById('fixed-list').innerHTML = '';
+  document.getElementById('other-list').innerHTML = '';
+  document.getElementById('card-list').innerHTML  = '';
+  document.getElementById('budget').value = '';
+  document.getElementById('copy-banner').classList.remove('visible');
+
   try {
-    const raw = localStorage.getItem('gastos_v4');
+    const raw = localStorage.getItem(activeKey());
     if (raw) {
       const d = JSON.parse(raw);
       document.getElementById('budget').value = d.budget || '';
       renderList('fixed-list', d.fixed?.length ? d.fixed : DEFAULTS);
       renderList('other-list', d.other || []);
+      (d.cards || []).forEach(c => addCardRow(c));
+      update();
       return;
     }
   } catch(e) {}
+  // Month is empty — check if prev month has data
   renderList('fixed-list', DEFAULTS);
   renderList('other-list', []);
   update();
+  const prev = prevMonthKey();
+  if (localStorage.getItem(prev.key)) {
+    document.getElementById('copy-banner-desc').textContent =
+      'Copiar conceptos y montos de ' + MONTHS[prev.m] + ' ' + prev.y;
+    document.getElementById('copy-banner').classList.add('visible');
+  }
+}
+
+function copyPrevMonth() {
+  const prev = prevMonthKey();
+  const raw  = localStorage.getItem(prev.key);
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    // Reset paid status and notes, keep names/amounts/due
+    const resetItems = items => (items || []).map(i => ({ ...i, paid: false, note: '' }));
+    const resetCards = cards => (cards || []).map(c => ({ ...c, pagadas: '0' }));
+    document.getElementById('budget').value = d.budget || '';
+    renderList('fixed-list', d.fixed?.length ? resetItems(d.fixed) : DEFAULTS);
+    renderList('other-list', resetItems(d.other || []));
+    document.getElementById('card-list').innerHTML = '';
+    resetCards(d.cards || []).forEach(c => addCardRow(c));
+    document.getElementById('copy-banner').classList.remove('visible');
+    update();
+  } catch(e) {}
+}
+
+function dismissBanner() {
+  document.getElementById('copy-banner').classList.remove('visible');
 }
 
 function renderList(id, items) {
@@ -379,6 +595,7 @@ function renderList(id, items) {
   items.forEach(i => addRow(id, i));
 }
 
+/* ── Main update ── */
 function update() {
   const budget = parseFloat(document.getElementById('budget').value) || 0;
   let total = 0, paidAmt = 0;
@@ -390,30 +607,24 @@ function update() {
     const dueVal = row.querySelector('.due-input').value;
     const name   = row.querySelector('.expense-name').value || 'Sin nombre';
     const status = getDueStatus(dueVal);
-
-    total += amt;
-    if (isPaid) paidAmt += amt;
+    total += amt; if (isPaid) paidAmt += amt;
 
     row.classList.remove('due-today', 'due-soon');
     if (!isPaid) {
       if (status === 'today') row.classList.add('due-today');
       else if (status === 'soon') row.classList.add('due-soon');
     }
-
     const badge = row.querySelector('.due-badge');
     badge.className = 'due-badge';
     if (dueVal && status) {
       badge.classList.add('show', status);
       const diff = parseInt(dueVal) - TODAY;
-      if (status === 'today')      badge.textContent = '⚠ Vence hoy';
-      else if (status === 'soon')  badge.textContent = `Vence en ${diff} dia${diff !== 1 ? 's' : ''}`;
-      else if (status === 'over')  badge.textContent = `Vencio el dia ${dueVal}`;
-      else                         badge.textContent = `Dia ${dueVal}`;
+      if (status === 'today')     badge.textContent = 'Vence hoy';
+      else if (status === 'soon') badge.textContent = `Vence en ${diff} dia${diff !== 1 ? 's' : ''}`;
+      else if (status === 'over') badge.textContent = `Vencio el dia ${dueVal}`;
+      else                        badge.textContent = `Dia ${dueVal}`;
     }
-
-    if (!isPaid && (status === 'today' || status === 'soon')) {
-      upcoming.push({ name, day: parseInt(dueVal), status });
-    }
+    if (!isPaid && (status === 'today' || status === 'soon')) upcoming.push({ name, day: parseInt(dueVal), status });
   });
 
   const remaining = budget - total;
@@ -422,33 +633,24 @@ function update() {
 
   document.getElementById('total-spent').textContent = fmt(total);
   document.getElementById('total-paid').textContent  = fmt(paidAmt);
-
   const remEl = document.getElementById('remaining');
   remEl.textContent = (remaining < 0 ? '-' : '') + fmt(remaining);
   remEl.className = 's-value ' + (remaining < 0 ? 'negative' : remaining > 0 ? 'positive' : '');
-
   const pctEl = document.getElementById('pct');
   pctEl.textContent = budget > 0 ? Math.round(realPct) + '%' : '0%';
   pctEl.className   = 's-value' + (over ? ' negative' : '');
-
   const fill = document.getElementById('progress-fill');
   fill.style.width = Math.min(realPct, 100) + '%';
   fill.className   = 'progress-fill' + (over ? ' over' : '');
   document.getElementById('progress-budget-label').textContent = fmt(budget);
-
   document.getElementById('alert-critical').classList.toggle('visible', realPct >= 75);
 
   const dueAlert = document.getElementById('alert-due');
-  const dueTags  = document.getElementById('due-tags');
   if (upcoming.length) {
     dueAlert.classList.add('visible');
-    dueTags.innerHTML = upcoming
-      .sort((a,b) => a.day - b.day)
-      .map(u => `<span class="due-tag ${u.status === 'today' ? 'today' : ''}">${u.name} — dia ${u.day}</span>`)
-      .join('');
-  } else {
-    dueAlert.classList.remove('visible');
-  }
+    document.getElementById('due-tags').innerHTML = upcoming.sort((a,b) => a.day - b.day)
+      .map(u => `<span class="due-tag ${u.status === 'today' ? 'today' : ''}">${u.name} — dia ${u.day}</span>`).join('');
+  } else { dueAlert.classList.remove('visible'); }
 
   const allRows  = document.querySelectorAll('.expense-row').length;
   const paidRows = document.querySelectorAll('.expense-row.paid').length;
@@ -464,15 +666,23 @@ function update() {
   save();
 }
 
+function refreshApp() {
+  if (!confirm("Borrar todos los datos de " + MONTHS[activeMonth] + " " + activeYear + "? Esta accion no se puede deshacer.")) return;
+  localStorage.removeItem(activeKey());
+  const btn = document.getElementById("refresh-btn");
+  btn.classList.add("spinning");
+  setTimeout(() => btn.classList.remove("spinning"), 500);
+  loadMonth();
+}
+
 function exportPDF() {
-  // Set a print-friendly title with month
   const orig = document.title;
-  document.title = `Gastos Fijos — ${MONTH}`;
   window.print();
   document.title = orig;
 }
 
-load();
+// Init
+loadMonth();
 </script>
 </body>
 </html>
